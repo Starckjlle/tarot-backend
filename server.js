@@ -7,22 +7,21 @@ const mercadopago = require("mercadopago");
 dotenv.config();
 
 const app = express();
+
+// AQUI É O PONTO CRÍTICO PARA A RENDER:
 const PORT = process.env.PORT || 3001;
 
-// Middleware básico
-app.use(cors());              // libera CORS pra qualquer origem
+app.use(cors());
 app.use(express.json());
 
-// LOG simples pra ver se subiu
-console.log("Inicializando servidor Tarot Backend...");
-
-// ===== TESTE RÁPIDO / SAÚDE =====
+// ===== ROTA DE TESTE (RAIZ) =====
 app.get("/", (req, res) => {
   res.json({
     status: "ok",
     message: "Tarot backend rodando.",
     hasToken: !!process.env.MP_ACCESS_TOKEN,
     frontendUrl: process.env.FRONTEND_URL || null,
+    port: PORT,
   });
 });
 
@@ -30,19 +29,19 @@ app.get("/", (req, res) => {
 const MP_ACCESS_TOKEN = process.env.MP_ACCESS_TOKEN;
 
 if (!MP_ACCESS_TOKEN) {
-  console.warn("⚠️ MP_ACCESS_TOKEN não definido. Verifique nas variáveis de ambiente da Render.");
+  console.warn("⚠️ MP_ACCESS_TOKEN não definido. Verifique nas variáveis de ambiente.");
 }
 
 mercadopago.configure({
   access_token: MP_ACCESS_TOKEN,
 });
 
-// Trata o preflight CORS explicitamente pra rota de pagamento
+// Trata preflight CORS (OPTIONS) explicitamente
 app.options("/create-preference", cors(), (req, res) => {
   res.sendStatus(200);
 });
 
-// ===== ROTA QUE O FRONT USA =====
+// ===== ROTA DE PAGAMENTO =====
 app.post("/create-preference", async (req, res) => {
   console.log("📩 POST /create-preference recebido. Body:", req.body);
 
@@ -53,18 +52,19 @@ app.post("/create-preference", async (req, res) => {
       items: [
         {
           title: "Leitura de Tarô Online",
-          description: "Consulta completa com até 3 perguntas (Tarô + numerologia).",
+          description:
+            "Consulta completa com até 3 perguntas (Tarô + numerologia).",
           quantity: 1,
           currency_id: "BRL",
           unit_price: 19.9,
         },
       ],
       back_urls: {
-        success: "http://localhost:3000/?paid=1",      // por enquanto em localhost
+        // por enquanto, front em localhost
+        success: "http://localhost:3000/?paid=1",
         pending: "http://localhost:3000/?paid=pending",
         failure: "http://localhost:3000/?paid=0",
       },
-      // retirado auto_return pra evitar chatice de validação
       metadata: {
         source: "tarot-online",
         payment_method_requested: method || "not_specified",
@@ -92,13 +92,7 @@ app.post("/create-preference", async (req, res) => {
   }
 });
 
-// ===== (Opcional) Webhook =====
-app.post("/webhook", (req, res) => {
-  console.log("🔔 Webhook Mercado Pago recebido");
-  res.sendStatus(200);
-});
-
-// ===== INICIA SERVIDOR =====
+// ===== INICIA SERVIDOR (ESSENCIAL PARA A RENDER) =====
 app.listen(PORT, () => {
   console.log(`🚀 Tarot backend ouvindo na porta ${PORT}`);
 });
