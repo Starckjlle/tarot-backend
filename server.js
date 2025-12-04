@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const app = express();
 
-// Porta obrigatória: a Render injeta process.env.PORT
+// Porta obrigatória para a Render. Local = 4000.
 const PORT = process.env.PORT || 4000;
 
 app.use(cors());
