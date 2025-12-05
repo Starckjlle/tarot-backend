@@ -1,11 +1,13 @@
-// server.js - TESTE MINIMAL PARA A RENDER
+// server.js - TESTE MINIMAL PARA A RENDER (VERSÃO CORRETA)
 
 const express = require("express");
 const cors = require("cors");
 
 const app = express();
 
-// Porta obrigatória para a Render. Local = 4000.
+// Porta obrigatória para a Render.
+// LOCAL: 4000
+// NA RENDER: ela injeta process.env.PORT automaticamente.
 const PORT = process.env.PORT || 4000;
 
 app.use(cors());
